@@ -34,78 +34,90 @@ $DatabaseHandler = new DatabaseManager();
 
 //###### Instances CronJob
 
-require_once(LIBRARY_PATH . '/system/SearxInstances.class.php');
+if((bool)$config["instances"]["enabled"] == True) {
+    require_once(LIBRARY_PATH . '/system/SearxInstances.class.php');
 
-$SearxInstancesObject = new SearxInstances();
+    $SearxInstancesObject = new SearxInstances();
 
-$instances = $SearxInstancesObject->GetInstances();
+    $instances = $SearxInstancesObject->GetInstances();
 
-echo "<h1>Check searx-Instances</h1>";
+    echo "<h1>Check searx-Instances</h1>";
 
-foreach ($instances as $single_instance) {
-    echo $single_instance['id'].' - '.$single_instance['url'];
-    
-    $crl = curl_init();
-    $timeout = 5;
-    curl_setopt ($crl, CURLOPT_URL,$single_instance['url']);
-    curl_setopt ($crl, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
-    curl_setopt ($crl, CURLOPT_SSL_VERIFYPEER, false);
+    foreach ($instances as $single_instance) {
+        echo $single_instance['id'].' - '.$single_instance['url'];
+        
+        $crl = curl_init();
+        $timeout = (int)$config["instances"]["timeout"];
+        curl_setopt ($crl, CURLOPT_URL,$single_instance['url']);
+        curl_setopt ($crl, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
+        curl_setopt ($crl, CURLOPT_SSL_VERIFYPEER, false);
 
-    $res_http = curl_exec($crl);
-    $res_total_time = (float)curl_getinfo($crl, CURLINFO_TOTAL_TIME );
-    $res_http_code = (int)curl_getinfo($crl, CURLINFO_HTTP_CODE );
-    // Rewrite to HTTP-CODE: 408 if timeout occour
-    if($res_http_code === 0 && $res_total_time >= $timeout) {
-        $res_http_code = 408;
+        $res_http = curl_exec($crl);
+        $res_total_time = (float)curl_getinfo($crl, CURLINFO_TOTAL_TIME );
+        $res_http_code = (int)curl_getinfo($crl, CURLINFO_HTTP_CODE );
+        // Rewrite to HTTP-CODE: 408 if timeout occour
+        if($res_http_code === 0 && $res_total_time >= $timeout) {
+            $res_http_code = 408;
+            }
+        
+        curl_close($crl);
+        
+        $res_timestamp = time();
+        $res_searx_version = NULL;
+        
+        // correct HTTP-CODE
+        if($res_http_code >= 200 && $res_http_code < 300 and $res_http != NULL) {
+        
+            //Create a new DOM document
+            $dom = new DOMDocument;
+
+            //Parse the HTML. The @ is used to suppress any parsing errors
+            //that will be thrown if the $html string isn't valid XHTML.
+            @$dom->loadHTML($res_http);
+
+            //Get all links. You could also use any other tag name here,
+            //like 'img' or 'table', to extract other tags.
+            $links = $dom->getElementsByTagName('meta');//<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+            //Query the DOM
+            //$links = $xpath->query( '//meta' );
+
+            //Display the results as in the previous example
+            foreach($links as $link){
+                if($link->getAttribute('name') == 'generator')
+                    $res_searx_version = $link->getAttribute('content');
+            }
         }
-    
-    curl_close($crl);
-    
-    $res_timestamp = time();
-    $res_searx_version = NULL;
-    
-    // correct HTTP-CODE
-    if($res_http_code >= 200 && $res_http_code < 300 and $res_http != NULL) {
-    
-        //Create a new DOM document
-        $dom = new DOMDocument;
+        
+        // save in database
+        $query = "UPDATE `#instances` SET ".
+            "`VERSION_STRING` = '".$res_searx_version."', ".
+            "`RETURN_CODE` = '".$res_http_code."', ".
+            "`LAST_UPDATE` = '".date('Y-m-d H:i:s',$res_timestamp)."' ".
+            "WHERE `searx_instances`.`ID` =".$single_instance['id'].";";
+        $DatabaseHandler->query($query);
 
-        //Parse the HTML. The @ is used to suppress any parsing errors
-        //that will be thrown if the $html string isn't valid XHTML.
-        @$dom->loadHTML($res_http);
-
-        //Get all links. You could also use any other tag name here,
-        //like 'img' or 'table', to extract other tags.
-        $links = $dom->getElementsByTagName('meta');//<meta http-equiv="X-UA-Compatible" content="IE=edge">
-
-        //Query the DOM
-        //$links = $xpath->query( '//meta' );
-
-        //Display the results as in the previous example
-        foreach($links as $link){
-            if($link->getAttribute('name') == 'generator')
-                $res_searx_version = $link->getAttribute('content');
-        }
+        // print result
+        if($res_http_code >= 200 && $res_http_code < 300)
+            echo ' - HTTP-CODE: '.$res_http_code;
+        else
+            echo ' - <b>HTTP-CODE: '.$res_http_code.'</b>';
+        echo ' - TIME: '.$res_total_time;
+        echo ' - TIMESTAMP: '.$res_timestamp;
+        echo ' - VERSION: '.$res_searx_version;
+        echo '<br/>';
     }
-    
-    // save in database
-    $query = "UPDATE `#instances` SET ".
-        "`VERSION_STRING` = '".$res_searx_version."', ".
-        "`RETURN_CODE` = '".$res_http_code."', ".
-        "`LAST_UPDATE` = '".date('Y-m-d H:i:s',$res_timestamp)."' ".
-        "WHERE `searx_instances`.`ID` =".$single_instance['id'].";";
-    $DatabaseHandler->query($query);
-
-    // print result
-    if($res_http_code >= 200 && $res_http_code < 300)
-        echo ' - HTTP-CODE: '.$res_http_code;
-    else
-        echo ' - <b>HTTP-CODE: '.$res_http_code.'</b>';
-    echo ' - TIME: '.$res_total_time;
-    echo ' - TIMESTAMP: '.$res_timestamp;
-    echo ' - VERSION: '.$res_searx_version;
-    echo '<br/>';
 }
+//###### Engines CronJob
 
+if((bool)$config["engines"]["enabled"] == True) {
+    require_once(LIBRARY_PATH . '/system/SearxEngines.class.php');
+
+    $SearxEnginesObject = new SearxEngines();
+
+    $engines = $SearxEnginesObject->GetEngines();
+
+    echo "<h1>Check searx-Engines</h1>";
+}
 ?>

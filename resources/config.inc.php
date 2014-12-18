@@ -30,6 +30,18 @@ $config = array(
         "host"      => "localhost",
         "tblprefix" => "searx_"
     ),
+    // config for testing searx-Instances
+    "instances" => array(
+        "enabled"   => True,
+        "timeout"   => 10
+    ),
+    // config for testing searx-Engines
+    "engines" => array(
+        "enabled"   => True,
+        "server"    => "https://searx.me",
+        "timeout"   => 10,
+        "keywords"  => array("New York","Linux","tree")
+    ),
 );
 
 // do not edit, required to search library paths!
