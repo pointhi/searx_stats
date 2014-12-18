@@ -34,7 +34,7 @@ $DatabaseHandler = new DatabaseManager();
 
 //###### Instances CronJob
 
-if((bool)$config["instances"]["enabled"] == True) {
+if((bool)$config["instances"]["cronjob"] == True) {
     require_once(LIBRARY_PATH . '/system/SearxInstances.class.php');
 
     $SearxInstancesObject = new SearxInstances();
@@ -111,7 +111,7 @@ if((bool)$config["instances"]["enabled"] == True) {
 }
 //###### Engines CronJob
 
-if((bool)$config["engines"]["enabled"] == True) {
+if((bool)$config["engines"]["cronjob"] == True) {
     require_once(LIBRARY_PATH . '/system/SearxEngines.class.php');
 
     $SearxEnginesObject = new SearxEngines();
