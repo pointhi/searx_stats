@@ -67,7 +67,9 @@ class DatabaseManager {
         {
         global $config;
         
-        $mysql_querry = str_replace('#',$config["db"]["tblprefix"],$query);     // Sorgt für einen austauschbaren prefix
+        // required to have a replacable prefix
+        $mysql_querry = str_replace('#',$config["db"]["tblprefix"],$query);    
+ 
         $this->result=mysql_query($mysql_querry,DatabaseManager::$connection);
         $this->counter = NULL;
         }
@@ -92,7 +94,7 @@ class DatabaseManager {
         }
     
 /*
- *  Sorgt für SQL-Injection sichere Datenbankabfragen
+ *  SQL-Injection save string-escaping
  */
         
     public static function correctString($String)
