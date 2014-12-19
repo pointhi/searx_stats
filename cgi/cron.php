@@ -94,10 +94,10 @@ if((bool)$config["instances"]["cronjob"] == True) {
         
         // save in database
         $query = "UPDATE `#instances` SET ".
-            "`VERSION_STRING` = '".$res_searx_version."', ".
-            "`RETURN_CODE` = '".$res_http_code."', ".
+            "`VERSION_STRING` = '".DatabaseManager::correctString($res_searx_version)."', ".
+            "`RETURN_CODE` = '".(int)$res_http_code."', ".
             "`LAST_UPDATE` = '".date('Y-m-d H:i:s',$res_timestamp)."' ".
-            "WHERE `#instances`.`ID` =".$single_instance['id'].";";
+            "WHERE `#instances`.`ID` =".(int)$single_instance['id'].";";
         $DatabaseHandler->query($query);
 
         // print result
@@ -174,7 +174,7 @@ if((bool)$config["engines"]["cronjob"] == True && $config["engines"]["server"] !
         $query = "UPDATE `#engines` SET ".
             "`IS_WORKING` = '".(int)$res_success."', ".
             "`LAST_UPDATE` = '".date('Y-m-d H:i:s',$res_timestamp)."' ".
-            "WHERE `#engines`.`ID` =".$single_engine['id'].";";
+            "WHERE `#engines`.`ID` =".(int)$single_engine['id'].";";
         $DatabaseHandler->query($query);
         
         if($res_success)
