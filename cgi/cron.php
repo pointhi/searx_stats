@@ -43,6 +43,8 @@ if((bool)$config["instances"]["cronjob"] == True) {
 
     echo "<h1>Check searx-Instances</h1>";
 
+
+    // TODO: rewrite to http://cn2.php.net/manual/en/function.curl-multi-exec.php
     foreach ($instances as $single_instance) {
         echo $single_instance['id'].' - '.$single_instance['url'];
         
@@ -95,7 +97,7 @@ if((bool)$config["instances"]["cronjob"] == True) {
             "`VERSION_STRING` = '".$res_searx_version."', ".
             "`RETURN_CODE` = '".$res_http_code."', ".
             "`LAST_UPDATE` = '".date('Y-m-d H:i:s',$res_timestamp)."' ".
-            "WHERE `searx_instances`.`ID` =".$single_instance['id'].";";
+            "WHERE `#instances`.`ID` =".$single_instance['id'].";";
         $DatabaseHandler->query($query);
 
         // print result
@@ -111,7 +113,7 @@ if((bool)$config["instances"]["cronjob"] == True) {
 }
 //###### Engines CronJob
 
-if((bool)$config["engines"]["cronjob"] == True) {
+if((bool)$config["engines"]["cronjob"] == True && $config["engines"]["server"] != '') {
     require_once(LIBRARY_PATH . '/system/SearxEngines.class.php');
 
     $SearxEnginesObject = new SearxEngines();
@@ -119,5 +121,69 @@ if((bool)$config["engines"]["cronjob"] == True) {
     $engines = $SearxEnginesObject->GetEngines();
 
     echo "<h1>Check searx-Engines</h1>";
+
+    // TODO: rewrite to http://cn2.php.net/manual/en/function.curl-multi-exec.php
+    foreach ($engines as $single_engine) {
+        echo $single_engine['id'].' - '.$single_engine['name'];
+        $res_success = False;
+        
+        // test engines as long with keywords, unless results appear
+        foreach ($config["engines"]["keywords"] as $keyword) {
+            $crl = curl_init();
+            $timeout = (int)$config["engines"]["timeout"];
+            curl_setopt ($crl, CURLOPT_URL,$config["engines"]["server"]);
+            curl_setopt ($crl, CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt ($crl, CURLOPT_CONNECTTIMEOUT, $timeout);
+            curl_setopt ($crl, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($crl, CURLOPT_POST, 1);
+            curl_setopt($crl, CURLOPT_POSTFIELDS, array(
+                category_none => 1,
+                q => '!'.$single_engine['name'].' '.$keyword,
+                pageno => 1,
+                format => 'json'
+            ));
+
+            $res_http = curl_exec($crl);
+            $res_total_time = (float)curl_getinfo($crl, CURLINFO_TOTAL_TIME );
+            $res_http_code = (int)curl_getinfo($crl, CURLINFO_HTTP_CODE );
+            
+            curl_close($crl);
+
+            $res_json = json_decode($res_http, true);
+            
+            $res_timestamp = time();
+            
+            if(count((array)$res_json['results']) > 0) {
+                $res_engine_name=preg_replace('/(\s|-|_)+/', '', $res_json['results'][0]['engine']);
+                $engine_name=preg_replace('/(\s|-|_)+/', '', $single_engine['name']);
+                
+                // check, if engine is enabled in searx
+                // other test posibilitiy:  strpos($single_instance['url'], '!'.$single_engine['name']) !== 0
+                if($res_engine_name === $engine_name) {
+                    echo ' -  QUERY: '.$res_json['query'];
+                    $res_success = True;
+                    break;
+                } // TODO, mark engine as not actiated
+            }
+            
+            // wait between requests
+            usleep((int)$config["engines"]["wait_time"]*1000);       
+        }
+        
+        // save in database
+        $query = "UPDATE `#engines` SET ".
+            "`IS_WORKING` = '".(int)$res_success."', ".
+            "`LAST_UPDATE` = '".date('Y-m-d H:i:s',$res_timestamp)."' ".
+            "WHERE `#engines`.`ID` =".$single_engine['id'].";";
+        $DatabaseHandler->query($query);
+        
+        if($res_success)
+            echo ' - SUCCESS<br/>';
+        else
+            echo ' - FAILED<br/>';
+
+        // wait between requests
+        usleep((int)$config["engines"]["wait_time"]*1000);
+    }
 }
 ?>

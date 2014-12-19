@@ -39,15 +39,15 @@ DatabaseManager::connect();
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="">
     <meta name="author" content="">
-    <link rel="icon" href="../../favicon.ico">
+    <link rel="icon" href="/img/favicon.png">
 
-    <title>Starter Template for Bootstrap</title>
+    <title>searx-stats</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
     <!-- Bootstrap theme -->
-    <link href="../../dist/css/bootstrap-theme.min.css" rel="stylesheet">
+    <link href="css/bootstrap-theme.min.css" rel="stylesheet">
     
     <!-- Custom styles for this template -->
     <link href="css/searx_stats.css" rel="stylesheet">
