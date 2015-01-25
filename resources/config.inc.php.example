@@ -41,7 +41,7 @@ $config = array(
         "server"    => "https://searx.me",
         "timeout"   => 5,
         "wait_time" => 500, // wait time between requests in ms
-        "keywords"  => array("New York","Linux","tree")
+        "keywords"  => array("New York", "Linux", "tree", "rock", "wikipedia", "game")
     ),
 );
 
