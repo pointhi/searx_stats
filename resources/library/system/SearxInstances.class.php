@@ -37,8 +37,8 @@ class SearxInstances {
     public function LoadInstances() {
         $this->instances = NULL;
         
-        // get all Instances from Database
-        $this->DatabaseHandler->query('SELECT * FROM #instances WHERE `ACTIVE`=1');
+        // get all Instances from Database in a usefull order
+        $this->DatabaseHandler->query('SELECT * FROM #instances WHERE `ACTIVE`=1 ORDER BY VERSION_STRING DESC, RETURN_CODE, ID');
         
         while ($row = $this->DatabaseHandler->fetchRow()) {        
             // parse timestamp

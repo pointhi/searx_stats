@@ -38,7 +38,7 @@ class SearxEngines {
         $this->engines = NULL;
         
         // get all Engines from Database
-        $this->DatabaseHandler->query('SELECT * FROM #engines WHERE `ACTIVE`=1');
+        $this->DatabaseHandler->query('SELECT * FROM #engines WHERE `ACTIVE`=1 ORDER BY NAME');
         
         while ($row = $this->DatabaseHandler->fetchRow()) {
             // parse timestamp

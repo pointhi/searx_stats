@@ -113,10 +113,14 @@ DatabaseManager::connect();
                     
                     $instances = $SearxInstancesObject->GetInstances();
 
+                    $instance_id = 0;
+
                     foreach ($instances as $single_instance) {
+                        $instance_id ++;
                         echo '<tr>';
 
-                        echo '<td>'.$single_instance['id'].'</td>';
+                        echo '<td>'.$instance_id.'</td>';
+                        
 
                         // print url of engine, and add http:// if not done yet
                         if(strpos($single_instance['url'], 'http') === 0 or strpos($single_instance['url'], 'https') === 0) {
@@ -226,10 +230,13 @@ DatabaseManager::connect();
                     
                     $engines = $SearxEnginesObject->GetEngines();
                     
+                    $engine_id = 0;
+                    
                     foreach ($engines as $single_engine) {
+                        $engine_id ++;
                         echo '<tr>';
                         
-                        echo '<td>'.$single_engine['id'].'</td>';
+                        echo '<td>'.$engine_id.'</td>';
                         echo '<td>'.$single_engine['name'].'</td>';
 
                         // show, if engine provide results
