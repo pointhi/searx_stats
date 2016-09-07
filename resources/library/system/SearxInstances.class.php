@@ -38,7 +38,7 @@ class SearxInstances {
         $this->instances = NULL;
         
         // get all Instances from Database in a usefull order
-        $this->DatabaseHandler->query('SELECT * FROM #instances WHERE `ACTIVE`=1 ORDER BY INET_ATON( SUBSTRING_INDEX( VERSION_STRING, '/', -1 ) ) DESC, RETURN_CODE, ID');
+        $this->DatabaseHandler->query('SELECT * FROM #instances WHERE `ACTIVE`=1 ORDER BY INET_ATON( SUBSTRING_INDEX( VERSION_STRING, \'/\', -1 ) ) DESC, RETURN_CODE, ID');
         
         while ($row = $this->DatabaseHandler->fetchRow()) {        
             // parse timestamp
